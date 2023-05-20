@@ -1,0 +1,58 @@
+* |A B C D E F G H| *
+* ----------------- *
+8 |r|n|b|q|k|b|n|r| 8
+7 | | | | | | | | | 7
+6 |p|p|p|p|p|p|p|p| 6
+5 |p|p|p|p|p|p|p|p| 5
+4 |P|P|P|P|P|P|P|P| 4
+3 |P|P|P|P|P|P|P|P| 3
+2 | | | | | | | | | 2
+1 |R|N|B|Q|K|B|N|R| 1
+* ----------------- *
+* |A B C D E F G H| *
+1 White: Rh3
+Illegal Move!
+2 White: Bh3
+Illegal Move!
+3 White: Nh3
+Illegal Move!
+4 White: Qe1
+Illegal Move!
+5 White: Kd1
+Illegal Move!
+6 White: e4
+Illegal Move!
+7 White: Rxh3
+Illegal Move!
+8 White: Bxh3
+Illegal Move!
+9 White: Nxh3
+Illegal Move!
+10 White: Qxe1
+Illegal Move!
+11 White: Kxd1
+Illegal Move!
+12 White: dxe4
+Illegal Move!
+13 White: Rxh2
+Illegal Move!
+14 White: Nxe2
+Illegal Move!
+15 White: Bxg2
+Illegal Move!
+16 White: Qxe2
+Illegal Move!
+17 White: Kxd2
+Illegal Move!
+18 White: Rg2
+Illegal Move!
+19 White: Nh2
+Illegal Move!
+20 White: Bf2
+Illegal Move!
+21 White: Qb2
+Illegal Move!
+22 White: Kc2
+Illegal Move!
+23 White: e2
+Illegal Move!

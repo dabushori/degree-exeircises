@@ -1,0 +1,5 @@
+data/
+small_data/
+very_small_data/
+*state_dict
+__pycache__/

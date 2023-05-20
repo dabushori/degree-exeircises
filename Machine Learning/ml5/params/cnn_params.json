@@ -1,0 +1,42 @@
+{
+    "conv0": {"kernel_depth": 16,
+                 "kernel_size": 3,
+                 "stride": 1,
+                 "padding": 1,
+                 "p": 0.1
+                 },
+    "conv1": {"kernel_depth": 16,
+              "kernel_size": 3,
+              "stride": 1,
+              "padding": 1,
+              "p": 0.1
+              },
+    "conv2": {"kernel_depth": 32,
+              "kernel_size": 3,
+              "stride": 1,
+              "padding": 1,
+              "p": 0.1
+              },
+    "conv3": {"kernel_depth": 64,
+              "kernel_size": 3,
+              "stride": 1,
+              "padding": 2,
+              "p": 0.1
+              },
+    "maxpool1": {
+        "kernel_size": 2, 
+        "stride": 3},
+    "maxpool2": {
+        "kernel_size": 2, 
+        "stride": 2},
+    "maxpool3": {
+        "kernel_size": 3, 
+        "stride": 2},
+    "linear1": {
+        "out": 512
+    },
+    "linear2": {
+        "out": 30
+    },
+    "linear3": {"out": 30}
+}

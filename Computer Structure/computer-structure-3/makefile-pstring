@@ -1,0 +1,13 @@
+# pstring tester makefile
+
+a.out: pstring.o test.o
+	gcc -o a.out pstring.o test.o -no-pie
+
+pstring.o: pstring.s pstring.h
+	gcc pstring.s -g -c -o pstring.o -no-pie 
+
+test.o: test.c pstring.h
+	gcc test.c -g -c -o test.o
+
+clean:
+	rm -f *.o a.out

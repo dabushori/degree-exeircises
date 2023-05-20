@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/dabushori/Desktop/computer structure/ex2/testForEX2/src/ex2.c
+stdint.h
+-
+stdio.h
+-
+string.h
+-
+
+/home/dabushori/Desktop/computer structure/ex2/testForEX2/src/testing.c
+stdio.h
+-
+ex2.c
+/home/dabushori/Desktop/computer structure/ex2/testForEX2/src/ex2.c
+

@@ -1,0 +1,1625 @@
+// loop unrolling
+
+	int i, j, limit = dim - 1;
+	pixel_sum col1 = {}, col2 = {}, col3 = {};
+	register int idim = dim;
+
+	// Think of something better than this shit...
+	// int min_intensity1, max_intensity1, max_row_dim1, max_col1, min_row_dim1, min_col1;
+	// int min_intensity2, max_intensity2, max_row_dim2, max_col2, min_row_dim2, min_col2;
+	// int min_intensity3, max_intensity3, max_row_dim3, max_col3, min_row_dim3, min_col3;
+
+	// Maybe:
+	int col1_min_sum, col1_max_sum, col1_min_index, col1_max_index;
+	pixel col1_min, col1_max;
+	int col2_min_sum, col2_max_sum, col2_min_index, col2_max_index;
+	pixel col2_min, col2_max;
+	int col3_min_sum, col3_max_sum, col3_min_index, col3_max_index;
+	pixel col3_min, col3_max;
+	int col_sum;
+	pixel min, max;
+	int min_sum, max_sum;
+
+	for (i = 1; i < limit; ++i)
+	{
+		// i * dim
+		pixel *first_row = src + idim - dim, *second_row = src + idim, *third_row = src + idim + dim;
+
+		register int currIndex = 0;
+
+		pixel up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+		col1_min = up;
+		col1_min_sum = up.red + up.green + up.blue;
+		col1_max = up;
+		col1_max_sum = col1_min_sum;
+		col1_max_index = 1;
+		col1_min_index = 1;
+
+		col_sum = mid.red + mid.green + mid.blue;
+		if (col_sum <= col1_min_sum)
+		{
+			col1_min_sum = col_sum;
+			col1_min = mid;
+			col1_min_index = 4;
+		}
+		else
+		{
+			col1_max_sum = col_sum;
+			col1_max = mid;
+			col1_max_index = 4;
+		}
+
+		col_sum = down.red + down.green + down.blue;
+		if (col_sum <= col1_min_sum)
+		{
+			col1_min_sum = col_sum;
+			col1_min = down;
+			col1_min_index = 7;
+		}
+		if (col_sum > col1_max_sum)
+		{
+			col1_max_sum = col_sum;
+			col1_max = down;
+			col1_max_index = 7;
+		}
+
+		col1.red = up.red + mid.red + down.red;
+		col1.green = up.green + mid.green + down.green;
+		col1.blue = up.blue + mid.blue + down.blue;
+
+		++currIndex;
+
+		up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+		col2_min = up;
+		col2_min_sum = up.red + up.green + up.blue;
+		col2_min_index = 2;
+		col2_max = up;
+		col2_max_sum = col2_min_sum;
+		col2_max_index = 2;
+
+		col_sum = mid.red + mid.green + mid.blue;
+		if (col_sum <= col2_min_sum)
+		{
+			col2_min_index = 5;
+			col2_min_sum = col_sum;
+			col2_min = mid;
+		}
+		else
+		{
+			col2_max_sum = col_sum;
+			col2_max = mid;
+			col2_max_index = 5;
+		}
+
+		col_sum = down.red + down.green + down.blue;
+		if (col_sum <= col2_min_sum)
+		{
+			col2_min_index = 8;
+			col2_min_sum = col_sum;
+			col2_min = down;
+		}
+		if (col_sum > col2_max_sum)
+		{
+			col2_max_index = 8;
+			col2_max_sum = col_sum;
+			col2_max = down;
+		}
+
+		col2.red = up.red + mid.red + down.red;
+		col2.green = up.green + mid.green + down.green;
+		col2.blue = up.blue + mid.blue + down.blue;
+
+		++currIndex;
+
+		pixel_sum sum;
+		pixel s;
+		for (j = 5; j <= dim; j += 3)
+		{
+			up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+			col3_min = up;
+			col3_min_sum = up.red + up.green + up.blue;
+			col3_min_index = 3;
+			col3_max = up;
+			col3_max_sum = col3_min_sum;
+			col3_max_index = 3;
+
+			col_sum = mid.red + mid.green + mid.blue;
+			if (col_sum <= col3_min_sum)
+			{
+				col3_min_index = 6;
+				col3_min_sum = col_sum;
+				col3_min = mid;
+			}
+			else
+			{
+				col3_max_index = 6;
+				col3_max_sum = col_sum;
+				col3_max = mid;
+			}
+
+			col_sum = down.red + down.green + down.blue;
+			if (col_sum <= col3_min_sum)
+			{
+				col3_min_index = 9;
+				col3_min_sum = col_sum;
+				col3_min = down;
+			}
+			if (col_sum > col3_max_sum)
+			{
+				col3_max_index = 9;
+				col3_max_sum = col_sum;
+				col3_max = down;
+			}
+
+			col3.red = up.red + mid.red + down.red;
+			col3.green = up.green + mid.green + down.green;
+			col3.blue = up.blue + mid.blue + down.blue;
+
+			if (col1_min_sum < col2_min_sum)
+			{
+				if (col1_min_sum < col3_min_sum)
+				{
+					min_sum = col1_min_sum;
+					min = col1_min;
+					// col1 win
+				}
+				else
+				{
+					if (col1_min_sum > col3_min_sum)
+					{
+						// col3 win
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_index > col1_min_index)
+						{
+							// col 3
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							// col 1
+							min_sum = col1_min_sum;
+							min = col1_min;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_min_sum > col2_min_sum)
+				{
+					if (col2_min_sum < col3_min_sum)
+					{
+						// 2 win
+						min_sum = col2_min_sum;
+						min = col2_min;
+					}
+					else
+					{
+						if (col2_min_sum > col3_min_sum)
+						{
+							// 3 win
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								// col 3
+								min_sum = col3_min_sum;
+								min = col3_min;
+							}
+							else
+							{
+								// col 2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col3_min_sum < col2_min_sum)
+					{
+						// col3
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_sum > col2_min_sum)
+						{
+							if (col1_min_index > col2_min_index)
+							{
+								// col1
+								min_sum = col1_min_sum;
+								min = col1_min;
+							}
+							else
+							{
+								// col2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								if (col3_min_index > col1_min_index)
+								{
+									// col3
+									min_sum = col3_min_sum;
+									min = col3_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+							else
+							{
+								if (col2_min_index > col1_min_index)
+								{
+									// col2
+									min_sum = col2_min_sum;
+									min = col2_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (col1_max_sum > col2_max_sum)
+			{
+				if (col1_max_sum > col3_max_sum)
+				{
+					max = col1_max;
+					max_sum = col1_max_sum;
+				}
+				else
+				{
+					if (col1_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col1_max_index < col3_max_index)
+						{
+							max = col1_max;
+							max_sum = col1_max_sum;
+						}
+						else
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_max_sum < col2_max_sum)
+				{
+					if (col2_max_sum > col3_max_sum)
+					{
+						max = col2_max;
+						max_sum = col2_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum < col3_max_sum)
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+						else
+						{
+							if (col2_max_index < col3_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col3_max;
+								max_sum = col3_max_sum;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col2_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum > col3_max_sum)
+						{
+							if (col1_max_index > col2_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col1_max;
+								max_sum = col1_max_sum;
+							}
+						}
+						else
+						{
+							if (col1_max_index < col2_max_index)
+							{
+								if (col1_max_index < col3_max_index)
+								{
+									max = col1_max;
+									max_sum = col1_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+							else
+							{
+								if (col2_max_index < col3_max_index)
+								{
+									max = col2_max;
+									max_sum = col2_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			sum.red = (col1.red + col2.red + col3.red - ((int)max.red) - ((int)min.red));
+			sum.red /= 7;
+			s.red = (unsigned char)sum.red;
+			sum.green = (col1.green + col2.green + col3.green - ((int)max.green) - ((int)min.green));
+			sum.green /= 7;
+			s.green = (unsigned char)sum.green;
+			sum.blue = (col1.blue + col2.blue + col3.blue - ((int)max.blue) - ((int)min.blue));
+			sum.blue /= 7;
+			s.blue = (unsigned char)sum.blue;
+			dst[idim + currIndex - 1] = s;
+
+			++currIndex;
+
+			up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+			col1_min = up;
+			col1_min_sum = up.red + up.green + up.blue;
+			col1_min_index = 1;
+			col1_max = up;
+			col1_max_sum = col1_min_sum;
+			col1_max_index = 1;
+
+			col_sum = mid.red + mid.green + mid.blue;
+			if (col_sum <= col1_min_sum)
+			{
+				col1_min_index = 4;
+				col1_min_sum = col_sum;
+				col1_min = mid;
+			}
+			else
+			{
+				col1_max_index = 4;
+				col1_max_sum = col_sum;
+				col1_max = mid;
+			}
+
+			col_sum = down.red + down.green + down.blue;
+			if (col_sum <= col1_min_sum)
+			{
+				col1_min_index = 7;
+				col1_min_sum = col_sum;
+				col1_min = down;
+			}
+			if (col_sum > col1_max_sum)
+			{
+				col1_max_index = 7;
+				col1_max_sum = col_sum;
+				col1_max = down;
+			}
+
+			col1.red = up.red + mid.red + down.red;
+			col1.green = up.green + mid.green + down.green;
+			col1.blue = up.blue + mid.blue + down.blue;
+
+			if (col1_min_sum < col2_min_sum)
+			{
+				if (col1_min_sum < col3_min_sum)
+				{
+					min_sum = col1_min_sum;
+					min = col1_min;
+					// col1 win
+				}
+				else
+				{
+					if (col1_min_sum > col3_min_sum)
+					{
+						// col3 win
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_index > col1_min_index)
+						{
+							// col 3
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							// col 1
+							min_sum = col1_min_sum;
+							min = col1_min;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_min_sum > col2_min_sum)
+				{
+					if (col2_min_sum < col3_min_sum)
+					{
+						// 2 win
+						min_sum = col2_min_sum;
+						min = col2_min;
+					}
+					else
+					{
+						if (col2_min_sum > col3_min_sum)
+						{
+							// 3 win
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								// col 3
+								min_sum = col3_min_sum;
+								min = col3_min;
+							}
+							else
+							{
+								// col 2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col3_min_sum < col2_min_sum)
+					{
+						// col3
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_sum > col2_min_sum)
+						{
+							if (col1_min_index > col2_min_index)
+							{
+								// col1
+								min_sum = col1_min_sum;
+								min = col1_min;
+							}
+							else
+							{
+								// col2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								if (col3_min_index > col1_min_index)
+								{
+									// col3
+									min_sum = col3_min_sum;
+									min = col3_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+							else
+							{
+								if (col2_min_index > col1_min_index)
+								{
+									// col2
+									min_sum = col2_min_sum;
+									min = col2_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (col1_max_sum > col2_max_sum)
+			{
+				if (col1_max_sum > col3_max_sum)
+				{
+					max = col1_max;
+					max_sum = col1_max_sum;
+				}
+				else
+				{
+					if (col1_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col1_max_index < col3_max_index)
+						{
+							max = col1_max;
+							max_sum = col1_max_sum;
+						}
+						else
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_max_sum < col2_max_sum)
+				{
+					if (col2_max_sum > col3_max_sum)
+					{
+						max = col2_max;
+						max_sum = col2_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum < col3_max_sum)
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+						else
+						{
+							if (col2_max_index < col3_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col3_max;
+								max_sum = col3_max_sum;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col2_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum > col3_max_sum)
+						{
+							if (col1_max_index > col2_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col1_max;
+								max_sum = col1_max_sum;
+							}
+						}
+						else
+						{
+							if (col1_max_index < col2_max_index)
+							{
+								if (col1_max_index < col3_max_index)
+								{
+									max = col1_max;
+									max_sum = col1_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+							else
+							{
+								if (col2_max_index < col3_max_index)
+								{
+									max = col2_max;
+									max_sum = col2_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			sum.red = (col1.red + col2.red + col3.red - ((int)max.red) - ((int)min.red));
+			sum.red /= 7;
+			s.red = (unsigned char)sum.red;
+			sum.green = (col1.green + col2.green + col3.green - ((int)max.green) - ((int)min.green));
+			sum.green /= 7;
+			s.green = (unsigned char)sum.green;
+			sum.blue = (col1.blue + col2.blue + col3.blue - ((int)max.blue) - ((int)min.blue));
+			sum.blue /= 7;
+			s.blue = (unsigned char)sum.blue;
+			dst[idim + currIndex - 1] = s;
+
+			++currIndex;
+
+			up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+			col2_min = up;
+			col2_min_sum = up.red + up.green + up.blue;
+			col2_min_index = 2;
+			col2_max = up;
+			col2_max_sum = col2_min_sum;
+			col2_max_index = 2;
+
+			col_sum = mid.red + mid.green + mid.blue;
+			if (col_sum <= col2_min_sum)
+			{
+				col2_min_index = 5;
+				col2_min_sum = col_sum;
+				col2_min = mid;
+			}
+			else
+			{
+				col2_max_index = 5;
+				col2_max_sum = col_sum;
+				col2_max = mid;
+			}
+
+			col_sum = down.red + down.green + down.blue;
+			if (col_sum <= col2_min_sum)
+			{
+				col2_min_index = 8;
+				col2_min_sum = col_sum;
+				col2_min = down;
+			}
+			if (col_sum > col2_max_sum)
+			{
+				col2_max_index = 8;
+				col2_max_sum = col_sum;
+				col2_max = down;
+			}
+
+			col2.red = up.red + mid.red + down.red;
+			col2.green = up.green + mid.green + down.green;
+			col2.blue = up.blue + mid.blue + down.blue;
+
+			if (col1_min_sum < col2_min_sum)
+			{
+				if (col1_min_sum < col3_min_sum)
+				{
+					min_sum = col1_min_sum;
+					min = col1_min;
+					// col1 win
+				}
+				else
+				{
+					if (col1_min_sum > col3_min_sum)
+					{
+						// col3 win
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_index > col1_min_index)
+						{
+							// col 3
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							// col 1
+							min_sum = col1_min_sum;
+							min = col1_min;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_min_sum > col2_min_sum)
+				{
+					if (col2_min_sum < col3_min_sum)
+					{
+						// 2 win
+						min_sum = col2_min_sum;
+						min = col2_min;
+					}
+					else
+					{
+						if (col2_min_sum > col3_min_sum)
+						{
+							// 3 win
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								// col 3
+								min_sum = col3_min_sum;
+								min = col3_min;
+							}
+							else
+							{
+								// col 2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col3_min_sum < col2_min_sum)
+					{
+						// col3
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_sum > col2_min_sum)
+						{
+							if (col1_min_index > col2_min_index)
+							{
+								// col1
+								min_sum = col1_min_sum;
+								min = col1_min;
+							}
+							else
+							{
+								// col2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								if (col3_min_index > col1_min_index)
+								{
+									// col3
+									min_sum = col3_min_sum;
+									min = col3_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+							else
+							{
+								if (col2_min_index > col1_min_index)
+								{
+									// col2
+									min_sum = col2_min_sum;
+									min = col2_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (col1_max_sum > col2_max_sum)
+			{
+				if (col1_max_sum > col3_max_sum)
+				{
+					max = col1_max;
+					max_sum = col1_max_sum;
+				}
+				else
+				{
+					if (col1_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col1_max_index < col3_max_index)
+						{
+							max = col1_max;
+							max_sum = col1_max_sum;
+						}
+						else
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_max_sum < col2_max_sum)
+				{
+					if (col2_max_sum > col3_max_sum)
+					{
+						max = col2_max;
+						max_sum = col2_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum < col3_max_sum)
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+						else
+						{
+							if (col2_max_index < col3_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col3_max;
+								max_sum = col3_max_sum;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col2_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum > col3_max_sum)
+						{
+							if (col1_max_index > col2_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col1_max;
+								max_sum = col1_max_sum;
+							}
+						}
+						else
+						{
+							if (col1_max_index < col2_max_index)
+							{
+								if (col1_max_index < col3_max_index)
+								{
+									max = col1_max;
+									max_sum = col1_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+							else
+							{
+								if (col2_max_index < col3_max_index)
+								{
+									max = col2_max;
+									max_sum = col2_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			sum.red = (col1.red + col2.red + col3.red - ((int)max.red) - ((int)min.red));
+			sum.red /= 7;
+			s.red = (unsigned char)sum.red;
+			sum.green = (col1.green + col2.green + col3.green - ((int)max.green) - ((int)min.green));
+			sum.green /= 7;
+			s.green = (unsigned char)sum.green;
+			sum.blue = (col1.blue + col2.blue + col3.blue - ((int)max.blue) - ((int)min.blue));
+			sum.blue /= 7;
+			s.blue = (unsigned char)sum.blue;
+			dst[idim + currIndex - 1] = s;
+
+			++currIndex;
+		}
+
+		// the reminder (1 or 2 pixels)
+		if (currIndex != dim)
+		{
+			up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+			col3_min = up;
+			col3_min_sum = up.red + up.green + up.blue;
+			col3_min_index = 3;
+			col3_max = up;
+			col3_max_sum = col3_min_sum;
+			col3_max_index = 3;
+
+			col_sum = mid.red + mid.green + mid.blue;
+			if (col_sum <= col3_min_sum)
+			{
+				col3_min_index = 6;
+				col3_min_sum = col_sum;
+				col3_min = mid;
+			}
+			else
+			{
+				col3_max_index = 6;
+				col3_max_sum = col_sum;
+				col3_max = mid;
+			}
+
+			col_sum = down.red + down.green + down.blue;
+			if (col_sum <= col3_min_sum)
+			{
+				col3_min_index = 9;
+				col3_min_sum = col_sum;
+				col3_min = down;
+			}
+			if (col_sum > col3_max_sum)
+			{
+				col3_max_index = 9;
+				col3_max_sum = col_sum;
+				col3_max = down;
+			}
+
+			col3.red = up.red + mid.red + down.red;
+			col3.green = up.green + mid.green + down.green;
+			col3.blue = up.blue + mid.blue + down.blue;
+
+			if (col1_min_sum < col2_min_sum)
+			{
+				if (col1_min_sum < col3_min_sum)
+				{
+					min_sum = col1_min_sum;
+					min = col1_min;
+					// col1 win
+				}
+				else
+				{
+					if (col1_min_sum > col3_min_sum)
+					{
+						// col3 win
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_index > col1_min_index)
+						{
+							// col 3
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							// col 1
+							min_sum = col1_min_sum;
+							min = col1_min;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_min_sum > col2_min_sum)
+				{
+					if (col2_min_sum < col3_min_sum)
+					{
+						// 2 win
+						min_sum = col2_min_sum;
+						min = col2_min;
+					}
+					else
+					{
+						if (col2_min_sum > col3_min_sum)
+						{
+							// 3 win
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								// col 3
+								min_sum = col3_min_sum;
+								min = col3_min;
+							}
+							else
+							{
+								// col 2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col3_min_sum < col2_min_sum)
+					{
+						// col3
+						min_sum = col3_min_sum;
+						min = col3_min;
+					}
+					else
+					{
+						if (col3_min_sum > col2_min_sum)
+						{
+							if (col1_min_index > col2_min_index)
+							{
+								// col1
+								min_sum = col1_min_sum;
+								min = col1_min;
+							}
+							else
+							{
+								// col2
+								min_sum = col2_min_sum;
+								min = col2_min;
+							}
+						}
+						else
+						{
+							if (col3_min_index > col2_min_index)
+							{
+								if (col3_min_index > col1_min_index)
+								{
+									// col3
+									min_sum = col3_min_sum;
+									min = col3_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+							else
+							{
+								if (col2_min_index > col1_min_index)
+								{
+									// col2
+									min_sum = col2_min_sum;
+									min = col2_min;
+								}
+								else
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (col1_max_sum > col2_max_sum)
+			{
+				if (col1_max_sum > col3_max_sum)
+				{
+					max = col1_max;
+					max_sum = col1_max_sum;
+				}
+				else
+				{
+					if (col1_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col1_max_index < col3_max_index)
+						{
+							max = col1_max;
+							max_sum = col1_max_sum;
+						}
+						else
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (col1_max_sum < col2_max_sum)
+				{
+					if (col2_max_sum > col3_max_sum)
+					{
+						max = col2_max;
+						max_sum = col2_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum < col3_max_sum)
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+						else
+						{
+							if (col2_max_index < col3_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col3_max;
+								max_sum = col3_max_sum;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col2_max_sum < col3_max_sum)
+					{
+						max = col3_max;
+						max_sum = col3_max_sum;
+					}
+					else
+					{
+						if (col2_max_sum > col3_max_sum)
+						{
+							if (col1_max_index > col2_max_index)
+							{
+								max = col2_max;
+								max_sum = col2_max_sum;
+							}
+							else
+							{
+								max = col1_max;
+								max_sum = col1_max_sum;
+							}
+						}
+						else
+						{
+							if (col1_max_index < col2_max_index)
+							{
+								if (col1_max_index < col3_max_index)
+								{
+									max = col1_max;
+									max_sum = col1_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+							else
+							{
+								if (col2_max_index < col3_max_index)
+								{
+									max = col2_max;
+									max_sum = col2_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			sum.red = (col1.red + col2.red + col3.red - ((int)max.red) - ((int)min.red));
+			sum.red /= 7;
+			s.red = (unsigned char)sum.red;
+			sum.green = (col1.green + col2.green + col3.green - ((int)max.green) - ((int)min.green));
+			sum.green /= 7;
+			s.green = (unsigned char)sum.green;
+			sum.blue = (col1.blue + col2.blue + col3.blue - ((int)max.blue) - ((int)min.blue));
+			sum.blue /= 7;
+			s.blue = (unsigned char)sum.blue;
+			dst[idim + currIndex - 1] = s;
+			++currIndex;
+
+			if (currIndex != dim)
+			{
+				up = first_row[currIndex], mid = second_row[currIndex], down = third_row[currIndex];
+
+				col1_min = up;
+				col1_min_sum = up.red + up.green + up.blue;
+				col1_min_index = 1;
+				col1_max = up;
+				col1_max_sum = col1_min_sum;
+				col1_max_index = 1;
+
+				col_sum = mid.red + mid.green + mid.blue;
+				if (col_sum < col1_min_sum)
+				{
+					col1_min_index = 4;
+					col1_min_sum = col_sum;
+					col1_min = mid;
+				}
+				else
+				{
+					col1_max_index = 4;
+					col1_max_sum = col_sum;
+					col1_max = mid;
+				}
+
+				col_sum = down.red + down.green + down.blue;
+				if (col_sum < col1_min_sum)
+				{
+					col1_min_index = 7;
+					col1_min_sum = col_sum;
+					col1_min = down;
+				}
+				if (col_sum > col1_max_sum)
+				{
+					col1_max_index = 7;
+					col1_max_sum = col_sum;
+					col1_max = down;
+				}
+
+				col1.red = up.red + mid.red + down.red;
+				col1.green = up.green + mid.green + down.green;
+				col1.blue = up.blue + mid.blue + down.blue;
+
+				if (col1_min_sum < col2_min_sum)
+				{
+					if (col1_min_sum < col3_min_sum)
+					{
+						min_sum = col1_min_sum;
+						min = col1_min;
+						// col1 win
+					}
+					else
+					{
+						if (col1_min_sum > col3_min_sum)
+						{
+							// col3 win
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							if (col3_min_index > col1_min_index)
+							{
+								// col 3
+								min_sum = col3_min_sum;
+								min = col3_min;
+							}
+							else
+							{
+								// col 1
+								min_sum = col1_min_sum;
+								min = col1_min;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col1_min_sum > col2_min_sum)
+					{
+						if (col2_min_sum < col3_min_sum)
+						{
+							// 2 win
+							min_sum = col2_min_sum;
+							min = col2_min;
+						}
+						else
+						{
+							if (col2_min_sum > col3_min_sum)
+							{
+								// 3 win
+								min_sum = col3_min_sum;
+								min = col3_min;
+							}
+							else
+							{
+								if (col3_min_index > col2_min_index)
+								{
+									// col 3
+									min_sum = col3_min_sum;
+									min = col3_min;
+								}
+								else
+								{
+									// col 2
+									min_sum = col2_min_sum;
+									min = col2_min;
+								}
+							}
+						}
+					}
+					else
+					{
+						if (col3_min_sum < col2_min_sum)
+						{
+							// col3
+							min_sum = col3_min_sum;
+							min = col3_min;
+						}
+						else
+						{
+							if (col3_min_sum > col2_min_sum)
+							{
+								if (col1_min_index > col2_min_index)
+								{
+									// col1
+									min_sum = col1_min_sum;
+									min = col1_min;
+								}
+								else
+								{
+									// col2
+									min_sum = col2_min_sum;
+									min = col2_min;
+								}
+							}
+							else
+							{
+								if (col3_min_index > col2_min_index)
+								{
+									if (col3_min_index > col1_min_index)
+									{
+										// col3
+										min_sum = col3_min_sum;
+										min = col3_min;
+									}
+									else
+									{
+										// col1
+										min_sum = col1_min_sum;
+										min = col1_min;
+									}
+								}
+								else
+								{
+									if (col2_min_index > col1_min_index)
+									{
+										// col2
+										min_sum = col2_min_sum;
+										min = col2_min;
+									}
+									else
+									{
+										// col1
+										min_sum = col1_min_sum;
+										min = col1_min;
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if (col1_max_sum > col2_max_sum)
+				{
+					if (col1_max_sum > col3_max_sum)
+					{
+						max = col1_max;
+						max_sum = col1_max_sum;
+					}
+					else
+					{
+						if (col1_max_sum < col3_max_sum)
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+						else
+						{
+							if (col1_max_index < col3_max_index)
+							{
+								max = col1_max;
+								max_sum = col1_max_sum;
+							}
+							else
+							{
+								max = col3_max;
+								max_sum = col3_max_sum;
+							}
+						}
+					}
+				}
+				else
+				{
+					if (col1_max_sum < col2_max_sum)
+					{
+						if (col2_max_sum > col3_max_sum)
+						{
+							max = col2_max;
+							max_sum = col2_max_sum;
+						}
+						else
+						{
+							if (col2_max_sum < col3_max_sum)
+							{
+								max = col3_max;
+								max_sum = col3_max_sum;
+							}
+							else
+							{
+								if (col2_max_index < col3_max_index)
+								{
+									max = col2_max;
+									max_sum = col2_max_sum;
+								}
+								else
+								{
+									max = col3_max;
+									max_sum = col3_max_sum;
+								}
+							}
+						}
+					}
+					else
+					{
+						if (col2_max_sum < col3_max_sum)
+						{
+							max = col3_max;
+							max_sum = col3_max_sum;
+						}
+						else
+						{
+							if (col2_max_sum > col3_max_sum)
+							{
+								if (col1_max_index > col2_max_index)
+								{
+									max = col2_max;
+									max_sum = col2_max_sum;
+								}
+								else
+								{
+									max = col1_max;
+									max_sum = col1_max_sum;
+								}
+							}
+							else
+							{
+								if (col1_max_index < col2_max_index)
+								{
+									if (col1_max_index < col3_max_index)
+									{
+										max = col1_max;
+										max_sum = col1_max_sum;
+									}
+									else
+									{
+										max = col3_max;
+										max_sum = col3_max_sum;
+									}
+								}
+								else
+								{
+									if (col2_max_index < col3_max_index)
+									{
+										max = col2_max;
+										max_sum = col2_max_sum;
+									}
+									else
+									{
+										max = col3_max;
+										max_sum = col3_max_sum;
+									}
+								}
+							}
+						}
+					}
+				}
+
+				sum.red = (col1.red + col2.red + col3.red - ((int)max.red) - ((int)min.red));
+				sum.red /= 7;
+				s.red = (unsigned char)sum.red;
+				sum.green = (col1.green + col2.green + col3.green - ((int)max.green) - ((int)min.green));
+				sum.green /= 7;
+				s.green = (unsigned char)sum.green;
+				sum.blue = (col1.blue + col2.blue + col3.blue - ((int)max.blue) - ((int)min.blue));
+				sum.blue /= 7;
+				s.blue = (unsigned char)sum.blue;
+				dst[idim + currIndex - 1] = s;
+
+				// no need to increment currIndex here
+			}
+		}
+
+		// here currIndex == dim for sure (we covered the reminder)
+
+		idim += dim;
+	}

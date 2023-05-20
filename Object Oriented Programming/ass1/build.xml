@@ -1,0 +1,46 @@
+	<project default="compile">
+	<path id="sourceFiles">
+		<fileset dir="src" casesensitive="yes">
+		  <include name="**/*.java"/>
+		</fileset>
+    </path>
+
+	<target name="compile">
+        <mkdir dir="bin"/>
+        <javac classpath="bin" srcdir="src" destdir="bin" includeantruntime="false"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+
+	<target name="run1" depends="compile" >
+        <!-- Here we should specify the main class - i.e. the class whose 'main' method is executed -->
+		<java classname="AveragePrimes" classpath="bin" fork="true">
+			<arg line="${args}"/>
+		</java>
+    </target>
+
+		<target name="run2" depends="compile" >
+	        <!-- Here we should specify the main class - i.e. the class whose 'main' method is executed -->
+			<java classname="TriangleCheck" classpath="bin" fork="true">
+				<arg line="${args}"/>
+		</java>
+	    </target>
+
+			<target name="run3" depends="compile" >
+		        <!-- Here we should specify the main class - i.e. the class whose 'main' method is executed -->
+				<java classname="CharCount" classpath="bin" fork="true">
+					<arg line="${args}"/>
+				</java>
+		    </target>
+
+	<!-- Run checkstyle on all our source files -->
+	<target name="check">
+        <java jar="checkstyle-5.7-all.jar" fork="true">
+			<arg line="-c biuoop.xml src/CharCount.java src/TriangleCheck.java src/AveragePrimes.java" />
+
+		</java>
+    </target>
+
+</project>
